@@ -273,7 +273,7 @@ class AcmeClient implements AcmeClientV2Interface
             // Check to see if response headers include link to alternate certificate download
             foreach ($this->getHttpClient()->getLastLinks() as $link) {
                 // If response headers include valid alternate certificate link, return that certificate instead
-                if (preg_match('/<(http.*acme\/cert\/.*\/\d)>;rel="alternate"/', $link, $matches)) {
+                if (preg_match('/<(http.*)>/', $link[0], $matches) && isset($link['rel']) && $link['rel'] === 'alternate') {
                     $response = $client->request('POST', $matches[1], $client->signKidPayload($matches[1], $this->getResourceAccount(), null), false);
                 }
             }

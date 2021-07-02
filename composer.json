@@ -68,7 +68,8 @@
         "phpspec/prophecy": "^1.9",
         "symfony/finder": "^3.4|^4.0",
         "symfony/phpunit-bridge": "^5.0",
-        "symfony/var-dumper": "^3.4|^4.0"
+        "symfony/var-dumper": "^3.4|^4.0",
+        "phpunit/phpunit": "^9.5"
     },
     "autoload": {
         "psr-4": {
