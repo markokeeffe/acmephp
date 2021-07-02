@@ -114,6 +114,30 @@ interface AcmeClientInterface
     public function requestCertificate($domain, CertificateRequest $csr, $timeout = 180);
 
     /**
+     * Request an alternate certificate for the given domain if available.
+     *
+     * This method should be called only if a previous authorization challenge has
+     * been successful for the asked domain.
+     *
+     * WARNING : This method SHOULD NOT BE USED in a web action. It will
+     * wait for the Certificate Authority to validate the certificate and
+     * this operation could be long.
+     *
+     * @param string             $domain  the domain to request a certificate for
+     * @param CertificateRequest $csr     the Certificate Signing Request (informations for the certificate)
+     * @param int                $timeout the timeout period
+     *
+     * @throws AcmeCoreServerException             when the ACME server returns an error HTTP status code
+     *                                             (the exception will be more specific if detail is provided)
+     * @throws AcmeCoreClientException             when an error occured during response parsing
+     * @throws CertificateRequestFailedException   when the certificate request failed
+     * @throws CertificateRequestTimedOutException when the certificate request timed out
+     *
+     * @return CertificateResponse the certificate data to save it somewhere you want
+     */
+    public function requestAlternateCertificate($domain, CertificateRequest $csr, $timeout = 180);
+
+    /**
      * @throws CertificateRevocationException
      */
     public function revokeCertificate(Certificate $certificate, RevocationReason $revocationReason = null);
