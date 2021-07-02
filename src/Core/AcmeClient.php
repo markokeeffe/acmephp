@@ -267,19 +267,24 @@ class AcmeClient implements AcmeClientV2Interface
         }
 
         // Request initial certificate response
-        $response = $this->executeAcmeCertificateRequest($response['certificate'], false);
+        $response = $client->request('POST', $response['certificate'], $client->signKidPayload($response['certificate'], $this->getResourceAccount(), null), false);
 
         if ($returnAlternateCertificateIfAvailable) {
             // Check to see if response headers include link to alternate certificate download
             foreach ($this->getHttpClient()->getLastLinks() as $link) {
                 // If response headers include valid alternate certificate link, return that certificate instead
                 if (preg_match('/<(http.*acme\/cert\/.*\/\d)>;rel="alternate"/', $link, $matches)) {
-                    return $this->returnCertificateResponse($csr, $this->executeAcmeCertificateRequest($matches[1], true));
+                    $response = $client->request('POST', $matches[1], $client->signKidPayload($matches[1], $this->getResourceAccount(), null), false);
                 }
             }
         }
 
-        return $this->returnCertificateResponse($csr, $response);
+        $certificatesChain = null;
+        foreach (array_reverse(explode("\n\n", $response)) as $pem) {
+            $certificatesChain = new Certificate($pem, $certificatesChain);
+        }
+
+        return new CertificateResponse($csr, $certificatesChain);
     }
 
     /**
@@ -390,39 +395,5 @@ class AcmeClient implements AcmeClientV2Interface
             $response['token'],
             $response['token'].'.'.$base64encoder->encode($this->getHttpClient()->getJWKThumbprint())
         );
-    }
-
-    /**
-     * @param string $certUrl
-     * @param bool   $returnCertAsString
-     *
-     * @return array|string
-     */
-    private function executeAcmeCertificateRequest($certUrl, $returnCertAsString)
-    {
-        $client = $this->getHttpClient();
-
-        return $client->request(
-            'POST',
-            $certUrl,
-            $client->signKidPayload($certUrl, $this->getResourceAccount(), null),
-            !$returnCertAsString
-        );
-    }
-
-    /**
-     * @param string $certificate
-     *
-     * @return \AcmePhp\Ssl\CertificateResponse
-     */
-    private function returnCertificateResponse(CertificateRequest $csr, $certificate)
-    {
-        $certificatesChain = null;
-
-        foreach (array_reverse(explode("\n\n", $certificate)) as $pem) {
-            $certificatesChain = new Certificate($pem, $certificatesChain);
-        }
-
-        return new CertificateResponse($csr, $certificatesChain);
     }
 }
